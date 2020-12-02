@@ -6,8 +6,9 @@ using namespace std;
 GLfloat red[] ={1.0, 0.0, 0.0};
 GLfloat posX = -0.125, sizeX=0.25, incX=0;
 GLfloat ballSize = 0.025, bx = 0.0, by =0.0, ballSpeed = 0.06;
-bool ballUp=false, ballDown=true, ballSide=false, isCatched=false;
+bool ballGoUp=false, ballDown=true, ballSide=false, isCatched=false, isColideToTop=false, isColideToBottom=false, isColideToRight=false, isColideToLeft=false;
 char msg1[] = "GAME OVER!";
+ float ballOnCatcher;
 
 
 int random_number_in_range(int start, int end)
@@ -38,20 +39,28 @@ static void display(void)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-    glColor3f(1,1,0);
+    /*glColor3f(1,1,0);
     glRasterPos3f(-0.1, 0.5, 0);
     for (int i = 0; i < strlen(msg1); i++)
     {
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, msg1[i]);
-    }
+    }*/
 
     glColor3f(0, 1, 0);
-    glRasterPos3f(-0.3, 0, 0);
-    char s[3];
-    sprintf( s, "%d", by );
-    for (int i = 0; i < 3; i++)
+    glRasterPos3f(-1.0, 0.95, 0);
+    char s[9];
+    sprintf( s, "%f", incX );
+    for (int i = 0; i < 9; i++)
     {
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, s[i]);
+    }
+     glColor3f(0, 1, 0);
+    glRasterPos3f(-1.0, 0.90, 0);
+    char ss[9];
+    sprintf( ss, "%f", ballOnCatcher );
+    for (int i = 0; i < 9; i++)
+    {
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, ss[i]);
     }
 
 
@@ -82,26 +91,26 @@ static void display(void)
 
 void Update(int v){
 
-    if(ballDown){
+   /* if(ballDown){
 
         if(bx<0){
             //bx-= incX;
             by-= ballSpeed;
 
             if(bx>=1 || bx<=-1){
-                ballSide=true;
+                ballSide=false;
                 ballDown=false;
                 if(bx>=1 )
-                    bx-= incX;
+                    bx+= abs(incX);
                 if(bx<=1 )
-                    bx+= incX;
+                    bx+= abs(incX);
             }
         }
          else if(bx>0){
             bx+= incX;
             by-= ballSpeed;
             if(bx>=1 || bx<=-1){
-                ballSide=true;
+                ballSide=false;
                 ballDown=false;
             }
         }
@@ -181,6 +190,126 @@ void Update(int v){
     if(by<= -0.9+0.06+ballSize && (bx>=posX && bx<=posX+sizeX)){
             ballDown=false;
             isCatched = true;
+    }
+
+    */
+
+// Collide Condition for the boundaries
+
+    if(bx<=-1 ){
+        isColideToLeft = true;
+    }
+     if(bx>=1 ){
+        isColideToRight = true;
+    }
+     if(by<=-1 ){
+        isColideToBottom = true;
+    }
+     if(by>=1 ){
+        isColideToTop = true;
+    }
+
+
+ // When collide to Top
+
+    if(isColideToTop){
+      //  ballDown = true;
+      //  isColideToLeft = false;
+      //  isColideToRight=false;
+     //   isColideToBottom=false;
+      //  isColideToTop=false;
+      //  ballGoUp=false;
+      //if(incX>0)
+         //   incX = incX;
+    }
+
+     if(isColideToLeft){
+      //  ballDown = false;
+      //  isColideToLeft = false;
+      //if(incX>0)
+         //   incX = incX;
+    }
+
+     if(isColideToRight){
+        //ballDown = false;
+       // isColideToLeft = false;
+       // isColideToTop=false;
+      //  isColideToBottom=false;
+
+        //bx-=0.2;
+     // if(incX>0)
+         //   incX = incX;
+    }
+
+
+
+
+    if(ballDown){
+        by-=ballSpeed;
+        bx+=abs(incX);
+
+        if(by<= -0.9+0.06+ballSize && (bx>=posX && bx<=posX+sizeX)){
+            ballDown=false;
+            isCatched = true;
+            ballGoUp=true;
+        }
+        if(isColideToRight){
+           if(!ballGoUp){
+                bx-=2*abs(incX);
+            }
+        }
+    }
+
+
+    if(!ballDown){
+
+        ballOnCatcher = (sizeX+(bx-posX))/sizeX;
+
+            by+=ballSpeed;
+
+        if(!isCatched && !isColideToLeft && !isColideToRight && !isColideToTop){
+            bx+=abs(incX);
+        }
+
+        if(isColideToRight){
+           if(ballGoUp){
+                bx-=abs(incX);
+           }
+        }
+         if(isColideToTop){
+            //by+=ballSpeed;
+            ballDown = true;
+            ballGoUp=false;
+            //bx-=incX;
+
+        }
+
+         if(isCatched){
+            if(ballOnCatcher>=1 && 1.1>ballOnCatcher)
+                incX=-0.025;
+            else if(ballOnCatcher>=1.1 && 1.2>ballOnCatcher)
+                incX=-0.01875;
+            else if(ballOnCatcher>=1.2 && 1.3>ballOnCatcher)
+                incX=-0.0125;
+            else if(ballOnCatcher>=1.3 && 1.4>ballOnCatcher)
+                incX=-0.00625;
+            else if(ballOnCatcher>=1.4 && 1.6>ballOnCatcher)
+                incX=-0.0;
+            else if(ballOnCatcher>=1.6 && 1.7>ballOnCatcher)
+                incX=0.00625;
+            else if(ballOnCatcher>=1.7 && 1.8>ballOnCatcher)
+                incX=0.0125;
+            else if(ballOnCatcher>=1.8 && 1.9>ballOnCatcher)
+                incX=0.01875;
+            else if(ballOnCatcher>=1.9 && 2.0>=ballOnCatcher)
+                incX=0.025;
+
+
+            isCatched=false;
+               isColideToTop=false;
+               ballGoUp=true;
+        }
+
     }
 
 
