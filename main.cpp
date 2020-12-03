@@ -5,7 +5,7 @@ using namespace std;
 
 GLfloat red[] ={1.0, 0.0, 0.0};
 GLfloat posX = -0.125, sizeX=0.25, incX=0;
-GLfloat ballSize = 0.025, bx = 0.0, by =0.0, ballSpeed = 0.06;
+GLfloat ballSize = 0.025, bx = 0.0, by =0.0, ballSpeed = -0.06;
 bool ballGoUp=false, ballDown=true, ballSide=false, isCatched=false, isColideToTop=false, isColideToBottom=false, isColideToRight=false, isColideToLeft=false;
 char msg1[] = "GAME OVER!";
  float ballOnCatcher;
@@ -196,6 +196,47 @@ void Update(int v){
 
 // Collide Condition for the boundaries
 
+
+        by+=ballSpeed;
+        bx+=incX;
+
+
+
+     if(by<= -0.9+0.06+ballSize && (bx>=posX && bx<=posX+sizeX)){
+            //ballDown=false;
+            isCatched = true;
+           // ballGoUp=true;
+        }
+     if(isCatched){
+            float ballOnCatcher = (sizeX+(bx-posX))/sizeX;
+
+            if(ballOnCatcher>=1 && 1.1>ballOnCatcher)
+                incX=-0.025;
+            else if(ballOnCatcher>=1.1 && 1.2>ballOnCatcher)
+                incX=-0.01875;
+            else if(ballOnCatcher>=1.2 && 1.3>ballOnCatcher)
+                incX=-0.0125;
+            else if(ballOnCatcher>=1.3 && 1.4>ballOnCatcher)
+                incX=-0.00625;
+            else if(ballOnCatcher>=1.4 && 1.6>ballOnCatcher)
+                incX=-0.0;
+            else if(ballOnCatcher>=1.6 && 1.7>ballOnCatcher)
+                incX=0.00625;
+            else if(ballOnCatcher>=1.7 && 1.8>ballOnCatcher)
+                incX=0.0125;
+            else if(ballOnCatcher>=1.8 && 1.9>ballOnCatcher)
+                incX=0.01875;
+            else if(ballOnCatcher>=1.9 && 2.0>=ballOnCatcher)
+                incX=0.025;
+
+                ballSpeed*=-1;
+                isCatched=false;
+               // isColideToTop=false;
+                //ballGoUp=true;
+        }
+
+
+
     if(bx<=-1 ){
         isColideToLeft = true;
     }
@@ -209,32 +250,45 @@ void Update(int v){
         isColideToTop = true;
     }
 
+    if(isColideToBottom || isColideToTop){
+        ballSpeed*=-1;
+        isColideToBottom=false;
+        isColideToTop=false;
 
+    }
+    if(isColideToLeft || isColideToRight){
+        incX*=-1;
+        isColideToRight=false;
+         isColideToLeft=false;
+    }
+
+/*
  // When collide to Top
 
     if(isColideToTop){
-      //  ballDown = true;
-      //  isColideToLeft = false;
-      //  isColideToRight=false;
-     //   isColideToBottom=false;
-      //  isColideToTop=false;
-      //  ballGoUp=false;
+        ballDown = true;
+        isColideToLeft = false;
+        isColideToRight=false;
+        isColideToBottom=false;
+        ballGoUp=false;
       //if(incX>0)
          //   incX = incX;
     }
 
      if(isColideToLeft){
-      //  ballDown = false;
-      //  isColideToLeft = false;
+        //ballDown = false;
+         isColideToRight=false;
+        isColideToBottom=false;
+        isColideToTop=false;
       //if(incX>0)
          //   incX = incX;
     }
 
      if(isColideToRight){
         //ballDown = false;
-       // isColideToLeft = false;
-       // isColideToTop=false;
-      //  isColideToBottom=false;
+        isColideToLeft = false;
+        isColideToTop=false;
+        isColideToBottom=false;
 
         //bx-=0.2;
      // if(incX>0)
@@ -246,7 +300,7 @@ void Update(int v){
 
     if(ballDown){
         by-=ballSpeed;
-        bx+=abs(incX);
+       bx+=incX;
 
         if(by<= -0.9+0.06+ballSize && (bx>=posX && bx<=posX+sizeX)){
             ballDown=false;
@@ -255,10 +309,12 @@ void Update(int v){
         }
         if(isColideToRight){
            if(!ballGoUp){
-                bx-=2*abs(incX);
+                bx-=2*incX;
             }
         }
     }
+
+    //  if any collide is true by*=-1
 
 
     if(!ballDown){
@@ -268,16 +324,18 @@ void Update(int v){
             by+=ballSpeed;
 
         if(!isCatched && !isColideToLeft && !isColideToRight && !isColideToTop){
-            bx+=abs(incX);
+            bx+=incX;
         }
 
         if(isColideToRight){
+
            if(ballGoUp){
-                bx-=abs(incX);
+                bx-=incX;
            }
         }
          if(isColideToTop){
             //by+=ballSpeed;
+          //  incX*=-1;
             ballDown = true;
             ballGoUp=false;
             //bx-=incX;
@@ -305,12 +363,14 @@ void Update(int v){
                 incX=0.025;
 
 
-            isCatched=false;
+               isCatched=false;
                isColideToTop=false;
                ballGoUp=true;
         }
 
     }
+
+    */
 
 
     glutTimerFunc(100, Update, v);
