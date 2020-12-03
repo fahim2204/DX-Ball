@@ -1,36 +1,49 @@
 #include<windows.h>
 #include <GL/glut.h>
 #include<iostream>
+#include "imageloader.h"
+
 using namespace std;
 
-GLfloat red[] ={1.0, 0.0, 0.0};
-GLfloat posX = -0.125, sizeX=0.25, incX=0;
+
+float x, y,  cl1,  cl2,  cl3;
+GLint points= 0;
+GLfloat color[3] ={1.0, 1.0, 1.0};
+GLfloat posX = -0.125, sizeX=0.25, incX=0.0;
 GLfloat ballSize = 0.025, bx = 0.0, by =0.0, ballSpeed = -0.06;
 bool ballGoUp=false, ballDown=true, ballSide=false, isCatched=false, isColideToTop=false, isColideToBottom=false, isColideToRight=false, isColideToLeft=false;
 char msg1[] = "GAME OVER!";
  float ballOnCatcher;
 
 
-int random_number_in_range(int start, int end)
-{
-    //srand((unsigned) time(0));
-    int randomNumber;
 
-    randomNumber = (rand() % end) + start;
-    return (randomNumber);
+float giveMeRandom(){
+    return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 }
 
 static void resize(int width, int height)
 {
-   // const float ar = (float) width / (float) height;
 
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-   //lFrustum(-ar, ar, -1.0, 1.0, 2.0, 100.0);
+    glOrtho(-1, 1, -1, 1, -1, 1);
 
     glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity() ;
+}
+
+
+void CreateBrick(float x, float y, float cl1, float cl2, float cl3){
+    glPushMatrix();
+    glTranslated(x, y, 0.0);
+    glBegin(GL_QUADS);
+    glColor3f(cl1, cl2, cl3);
+    glVertex2f(0.0, 0.0);
+    glVertex2f(0.0, 0.08);
+    glVertex2f(0.2, 0.08);
+    glVertex2f(0.2, 0.0);
+    glEnd();
+    glPopMatrix();
 }
 
 static void display(void)
@@ -46,28 +59,24 @@ static void display(void)
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, msg1[i]);
     }*/
 
+
     glColor3f(0, 1, 0);
-    glRasterPos3f(-1.0, 0.95, 0);
-    char s[9];
-    sprintf( s, "%f", incX );
-    for (int i = 0; i < 9; i++)
-    {
-        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, s[i]);
-    }
-     glColor3f(0, 1, 0);
-    glRasterPos3f(-1.0, 0.90, 0);
-    char ss[9];
-    sprintf( ss, "%f", ballOnCatcher );
+    glRasterPos3f(-0.98, 0.95, 0);
+    char ss[3];
+    sprintf( ss, "%d", points );
     for (int i = 0; i < 9; i++)
     {
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, ss[i]);
     }
 
 
+        //CreateBrick(giveMeRandom(),giveMeRandom(),giveMeRandom(),giveMeRandom(),giveMeRandom());
+
+
 //Ball
     glPushMatrix();
     glTranslated(bx, by, 0.0);
-    glColor3f(1.0, 1.0, 1.0);
+    glColor3f(color[1], color[2], color[3]);
     glutSolidSphere(ballSize,90,2);
     glPopMatrix();
 
@@ -87,6 +96,8 @@ static void display(void)
 
     glutSwapBuffers();
 }
+
+
 
 
 void Update(int v){
@@ -229,37 +240,47 @@ void Update(int v){
             else if(ballOnCatcher>=1.9 && 2.0>=ballOnCatcher)
                 incX=0.025;
 
+
+                PlaySound("F:\\Project\\C++\\GLUT\\DX-Ball\\Sounds\\Boing.wav",NULL,SND_ASYNC);
+                color[0]=static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+                color[1]=static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+                color[2]=static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
                 ballSpeed*=-1;
                 isCatched=false;
+                points++;
                // isColideToTop=false;
                 //ballGoUp=true;
         }
 
 
 
-    if(bx<=-1 ){
+    if(bx<=-1 + ballSize ){
         isColideToLeft = true;
     }
-     if(bx>=1 ){
+     if(bx>=1 - ballSize ){
         isColideToRight = true;
     }
-     if(by<=-1 ){
+     if(by<=-1 + ballSize){
         isColideToBottom = true;
     }
-     if(by>=1 ){
+     if(by>=1 - ballSize ){
         isColideToTop = true;
     }
 
     if(isColideToBottom || isColideToTop){
+        PlaySound("F:\\Project\\C++\\GLUT\\DX-Ball\\Sounds\\Swordswi.wav",NULL,SND_ASYNC);
         ballSpeed*=-1;
         isColideToBottom=false;
         isColideToTop=false;
+        points++;
 
     }
     if(isColideToLeft || isColideToRight){
+        PlaySound("F:\\Project\\C++\\GLUT\\DX-Ball\\Sounds\\Swordswi.wav",NULL,SND_ASYNC);
         incX*=-1;
         isColideToRight=false;
          isColideToLeft=false;
+         points++;
     }
 
 /*
@@ -411,6 +432,9 @@ static void key(unsigned char key, int x, int y)
         case 's':
            ballSize-=0.006;
            break;
+        case ' ':
+             ballSize+=0.006;
+            break;
     }
 
     glutPostRedisplay();
@@ -438,6 +462,7 @@ int main(int argc, char *argv[])
     glutSpecialFunc(mySpecialFunc);
     glutKeyboardFunc(key);
     glutTimerFunc(100, Update, 0);
+
     glutIdleFunc(idle);
 
     glutMainLoop();
