@@ -2,19 +2,20 @@
 #include <GL/glut.h>
 #include<iostream>
 #include "imageloader.h"
+#include "Brick.h"
 
 using namespace std;
 
 
-float x, y,  cl1,  cl2,  cl3;
+float x=-1.0, y=0.8;
 GLint points= 0;
 GLfloat color[3] ={1.0, 1.0, 1.0};
 GLfloat posX = -0.125, sizeX=0.25, incX=0.0;
 GLfloat ballSize = 0.025, bx = 0.0, by =0.0, ballSpeed = -0.06;
 bool ballGoUp=false, ballDown=true, ballSide=false, isCatched=false, isColideToTop=false, isColideToBottom=false, isColideToRight=false, isColideToLeft=false;
 char msg1[] = "GAME OVER!";
- float ballOnCatcher;
-
+float ballOnCatcher;
+Brick *brick = (Brick*)malloc(sizeof(Brick)*30);
 
 
 float giveMeRandom(){
@@ -27,24 +28,10 @@ static void resize(int width, int height)
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(-1, 1, -1, 1, -1, 1);
-
+   // glOrtho(0, 100, 0, 100, -1, 1);
     glMatrixMode(GL_MODELVIEW);
 }
 
-
-void CreateBrick(float x, float y, float cl1, float cl2, float cl3){
-    glPushMatrix();
-    glTranslated(x, y, 0.0);
-    glBegin(GL_QUADS);
-    glColor3f(cl1, cl2, cl3);
-    glVertex2f(0.0, 0.0);
-    glVertex2f(0.0, 0.08);
-    glVertex2f(0.2, 0.08);
-    glVertex2f(0.2, 0.0);
-    glEnd();
-    glPopMatrix();
-}
 
 static void display(void)
 {
@@ -60,6 +47,7 @@ static void display(void)
     }*/
 
 
+
     glColor3f(0, 1, 0);
     glRasterPos3f(-0.98, 0.95, 0);
     char ss[3];
@@ -70,7 +58,46 @@ static void display(void)
     }
 
 
-        //CreateBrick(giveMeRandom(),giveMeRandom(),giveMeRandom(),giveMeRandom(),giveMeRandom());
+
+    float ff = x, gg = y;
+    int xxi=0;
+
+    for(int i=0; i<3;i++){
+        for (int j=0 ; j<10 ; j++)
+        {
+            brick[xxi] = Brick(ff, gg);
+            ff+=0.202;
+            xxi++;
+        }
+            ff = x;
+           gg-=0.095;
+    }
+
+
+  brick[0].isDead = true;  brick[5].isDead = true;  brick[8].isDead = true;  brick[15].isDead = true;
+
+
+    for(int i=0; i<30;i++){
+        brick[i].CreateBrick();
+    }
+
+
+
+
+  // Creating Brick
+    /*float ff = x, gg = y;
+
+    for(int i=0; i<5;i++){
+        for (int j=0 ; j<10 ; j++)
+        {
+           // cout<<x;
+            CreateBrick(ff,gg);
+            ff+=0.202;
+        }
+            ff = x;
+           gg-=0.095;
+    }
+*/
 
 
 //Ball
@@ -102,108 +129,6 @@ static void display(void)
 
 void Update(int v){
 
-   /* if(ballDown){
-
-        if(bx<0){
-            //bx-= incX;
-            by-= ballSpeed;
-
-            if(bx>=1 || bx<=-1){
-                ballSide=false;
-                ballDown=false;
-                if(bx>=1 )
-                    bx+= abs(incX);
-                if(bx<=1 )
-                    bx+= abs(incX);
-            }
-        }
-         else if(bx>0){
-            bx+= incX;
-            by-= ballSpeed;
-            if(bx>=1 || bx<=-1){
-                ballSide=false;
-                ballDown=false;
-            }
-        }
-        else
-            by-= ballSpeed;
-
-
-
-      //  by-=ballSpeed;
-      //  bx+= incX;
-    }
-
-    if(!ballDown && ballSide){
-        if(bx<0){
-            bx-= incX;
-            by+= ballSpeed;
-
-            if(by>1-ballSize){
-                ballSide=false;
-                ballDown=true;
-
-            }
-        }
-        else{
-            bx-= incX;
-            by+= ballSpeed;
-
-             if(by>1-ballSize){
-                ballSide=false;
-                ballDown=true;
-            }
-        }
-    }
-
-    if(!ballDown && !ballSide){
-
-        float ballOnCatcher = (sizeX+(bx-posX))/sizeX;
-
-         by+= ballSpeed;
-         bx+= incX;
-         //bx+=0.0025;
-         if(by>1-ballSize)
-            ballDown=true;
-
-        if(bx>=1 || bx<=-1)
-           ballSide=true;
-
-//Catcher & ball after collision
-        if(isCatched){
-            if(ballOnCatcher>=1 && 1.1>ballOnCatcher)
-                incX=-0.025;
-            else if(ballOnCatcher>=1.1 && 1.2>ballOnCatcher)
-                incX=-0.01875;
-            else if(ballOnCatcher>=1.2 && 1.3>ballOnCatcher)
-                incX=-0.0125;
-            else if(ballOnCatcher>=1.3 && 1.4>ballOnCatcher)
-                incX=-0.00625;
-            else if(ballOnCatcher>=1.4 && 1.6>ballOnCatcher)
-                incX=-0.0;
-            else if(ballOnCatcher>=1.6 && 1.7>ballOnCatcher)
-                incX=0.00625;
-            else if(ballOnCatcher>=1.7 && 1.8>ballOnCatcher)
-                incX=0.0125;
-            else if(ballOnCatcher>=1.8 && 1.9>ballOnCatcher)
-                incX=0.01875;
-            else if(ballOnCatcher>=1.9 && 2.0>=ballOnCatcher)
-                incX=0.025;
-
-        }
-
-         isCatched=false;
-
-    //  cout<< ballOnCatcher<<endl;
-    }
-
-
-    if(by<= -0.9+0.06+ballSize && (bx>=posX && bx<=posX+sizeX)){
-            ballDown=false;
-            isCatched = true;
-    }
-
-    */
 
 // Collide Condition for the boundaries
 
@@ -283,119 +208,8 @@ void Update(int v){
          points++;
     }
 
-/*
- // When collide to Top
-
-    if(isColideToTop){
-        ballDown = true;
-        isColideToLeft = false;
-        isColideToRight=false;
-        isColideToBottom=false;
-        ballGoUp=false;
-      //if(incX>0)
-         //   incX = incX;
-    }
-
-     if(isColideToLeft){
-        //ballDown = false;
-         isColideToRight=false;
-        isColideToBottom=false;
-        isColideToTop=false;
-      //if(incX>0)
-         //   incX = incX;
-    }
-
-     if(isColideToRight){
-        //ballDown = false;
-        isColideToLeft = false;
-        isColideToTop=false;
-        isColideToBottom=false;
-
-        //bx-=0.2;
-     // if(incX>0)
-         //   incX = incX;
-    }
-
-
-
-
-    if(ballDown){
-        by-=ballSpeed;
-       bx+=incX;
-
-        if(by<= -0.9+0.06+ballSize && (bx>=posX && bx<=posX+sizeX)){
-            ballDown=false;
-            isCatched = true;
-            ballGoUp=true;
-        }
-        if(isColideToRight){
-           if(!ballGoUp){
-                bx-=2*incX;
-            }
-        }
-    }
-
-    //  if any collide is true by*=-1
-
-
-    if(!ballDown){
-
-        ballOnCatcher = (sizeX+(bx-posX))/sizeX;
-
-            by+=ballSpeed;
-
-        if(!isCatched && !isColideToLeft && !isColideToRight && !isColideToTop){
-            bx+=incX;
-        }
-
-        if(isColideToRight){
-
-           if(ballGoUp){
-                bx-=incX;
-           }
-        }
-         if(isColideToTop){
-            //by+=ballSpeed;
-          //  incX*=-1;
-            ballDown = true;
-            ballGoUp=false;
-            //bx-=incX;
-
-        }
-
-         if(isCatched){
-            if(ballOnCatcher>=1 && 1.1>ballOnCatcher)
-                incX=-0.025;
-            else if(ballOnCatcher>=1.1 && 1.2>ballOnCatcher)
-                incX=-0.01875;
-            else if(ballOnCatcher>=1.2 && 1.3>ballOnCatcher)
-                incX=-0.0125;
-            else if(ballOnCatcher>=1.3 && 1.4>ballOnCatcher)
-                incX=-0.00625;
-            else if(ballOnCatcher>=1.4 && 1.6>ballOnCatcher)
-                incX=-0.0;
-            else if(ballOnCatcher>=1.6 && 1.7>ballOnCatcher)
-                incX=0.00625;
-            else if(ballOnCatcher>=1.7 && 1.8>ballOnCatcher)
-                incX=0.0125;
-            else if(ballOnCatcher>=1.8 && 1.9>ballOnCatcher)
-                incX=0.01875;
-            else if(ballOnCatcher>=1.9 && 2.0>=ballOnCatcher)
-                incX=0.025;
-
-
-               isCatched=false;
-               isColideToTop=false;
-               ballGoUp=true;
-        }
-
-    }
-
-    */
-
 
     glutTimerFunc(100, Update, v);
-
 
 }
 
@@ -433,7 +247,7 @@ static void key(unsigned char key, int x, int y)
            ballSize-=0.006;
            break;
         case ' ':
-             ballSize+=0.006;
+             //brick[0].isDead = true;
             break;
     }
 
@@ -469,3 +283,7 @@ int main(int argc, char *argv[])
 
     return EXIT_SUCCESS;
 }
+
+
+
+

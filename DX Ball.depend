@@ -874,11 +874,12 @@
 1526093414 c:\program files\codeblocks\mingw\x86_64-w64-mingw32\include\gl\glu.h
 	<GL/gl.h>
 
-1606987480 source:f:\project\c++\glut\dx-ball\main.cpp
+1607190706 source:f:\project\c++\glut\dx-ball\main.cpp
 	<windows.h>
 	<GL/glut.h>
 	<iostream>
 	"imageloader.h"
+	"Brick.h"
 
 1526093414 c:\program files\codeblocks\mingw\x86_64-w64-mingw32\include\stdio.h
 	<crtdefs.h>
@@ -904,4 +905,12 @@
 	<crtdefs.h>
 
 1444855240 f:\project\c++\glut\dx-ball\imageloader.h
+
+1607191180 f:\project\c++\glut\dx-ball\include\brick.h
+
+1607191258 source:f:\project\c++\glut\dx-ball\src\brick.cpp
+	"Brick.h"
+	<windows.h>
+	<GL/glut.h>
+	<iostream>
 
