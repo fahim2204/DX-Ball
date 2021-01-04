@@ -874,11 +874,16 @@
 1526093414 c:\program files\codeblocks\mingw\x86_64-w64-mingw32\include\gl\glu.h
 	<GL/gl.h>
 
-1607190706 source:f:\project\c++\glut\dx-ball\main.cpp
+1609789550 source:f:\project\c++\glut\dx-ball\main.cpp
 	<windows.h>
 	<GL/glut.h>
 	<iostream>
+	<stdio.h>
+	<string.h>
+	<stdlib.h>
 	"imageloader.h"
+	<math.h>
+	<time.h>
 	"Brick.h"
 
 1526093414 c:\program files\codeblocks\mingw\x86_64-w64-mingw32\include\stdio.h
@@ -908,9 +913,36 @@
 
 1607191180 f:\project\c++\glut\dx-ball\include\brick.h
 
-1607191258 source:f:\project\c++\glut\dx-ball\src\brick.cpp
+1609753754 source:f:\project\c++\glut\dx-ball\src\brick.cpp
 	"Brick.h"
 	<windows.h>
 	<GL/glut.h>
 	<iostream>
+
+1526093414 c:\program files\codeblocks\mingw\x86_64-w64-mingw32\include\time.h
+	<crtdefs.h>
+	<_timeval.h>
+	<sys/timeb.h>
+	<pthread_time.h>
+
+1526093414 c:\program files\codeblocks\mingw\x86_64-w64-mingw32\include\sys\timeb.h
+	<crtdefs.h>
+	<sec_api/sys/timeb_s.h>
+
+1526093414 c:\program files\codeblocks\mingw\x86_64-w64-mingw32\include\sec_api\sys\timeb_s.h
+	<sys/timeb.h>
+
+1526093420 c:\program files\codeblocks\mingw\x86_64-w64-mingw32\include\pthread_time.h
+	<sys/timeb.h>
+
+1444855240 source:f:\project\c++\glut\dx-ball\src\imageloader.cpp
+	<assert.h>
+	<fstream>
+	"imageloader.h"
+
+1526093414 c:\program files\codeblocks\mingw\x86_64-w64-mingw32\include\assert.h
+	<crtdefs.h>
+	<stdlib.h>
+
+1444855240 f:\project\c++\glut\dx-ball\include\imageloader.h
 

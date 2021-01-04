@@ -1,283 +1,759 @@
 #include<windows.h>
 #include <GL/glut.h>
 #include<iostream>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "imageloader.h"
+#include <math.h>
+#include <time.h>
 #include "Brick.h"
+
 
 using namespace std;
 
+GLint m_viewport[4];
+GLuint texture;
+float mouseX ,mouseY ;
+float ballX, ballY, ballSize, ballSpeedY, ballSpeedX;
+float barPosX, barSize;
+int Score=0, highScore=0;
+int totalBrick = 1;
+float globalX= -1100.0, globalY= 600;
+float blocksize= 180, blockSpacing = 20;
 
-float x=-1.0, y=0.8;
-GLint points= 0;
-GLfloat color[3] ={1.0, 1.0, 1.0};
-GLfloat posX = -0.125, sizeX=0.25, incX=0.0;
-GLfloat ballSize = 0.025, bx = 0.0, by =0.0, ballSpeed = -0.06;
-bool ballGoUp=false, ballDown=true, ballSide=false, isCatched=false, isColideToTop=false, isColideToBottom=false, isColideToRight=false, isColideToLeft=false;
-char msg1[] = "GAME OVER!";
-float ballOnCatcher;
-Brick *brick = (Brick*)malloc(sizeof(Brick)*30);
+struct Block{
+    float posX1, posX2;
+    float posY1, posY2;
+    bool isDead;
+};
+
+Block blocks[50];
+
+bool startScreen = true, gameScreen = false, gameOverScreen=false, instructionsGame = false;
+bool gameQuit = false, isGameStarted = false, isCatched=false;
+bool isCollideToTop=false, isCollideToBottom=false, isCollideToRight=false, isCollideToLeft=false;
+bool mouseButtonPressed = false, isBlockCreated = false;
+Brick *brick = (Brick*)malloc(sizeof(Brick)*totalBrick);
+
+float brickPositionX[4][11];
 
 
-float giveMeRandom(){
-    return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+
+GLuint textures;
+Image *images[10];
+
+GLuint loadTexture(Image* image)
+{
+	GLuint textureId;
+	glGenTextures(1, &textureId);
+	glBindTexture(GL_TEXTURE_2D, textureId);
+	glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,image->width, image->height,0,GL_RGB,GL_UNSIGNED_BYTE,image->pixels);
+	return textureId;
 }
 
-static void resize(int width, int height)
+void GetImage()
 {
+    images[0] = loadBMP("F:\\Project\\C++\\GLUT\\DX-Ball\\Images\\bar.bmp");
+    images[1] = loadBMP("F:\\Project\\C++\\GLUT\\DX-Ball\\Images\\brick1.bmp");
+    images[2] = loadBMP("F:\\Project\\C++\\GLUT\\DX-Ball\\Images\\brick2.bmp");
+    images[3] = loadBMP("F:\\Project\\C++\\GLUT\\DX-Ball\\Images\\brick3.bmp");
+    images[4] = loadBMP("F:\\Project\\C++\\GLUT\\DX-Ball\\Images\\brick4.bmp");
+    images[5] = loadBMP("F:\\Project\\C++\\GLUT\\DX-Ball\\Images\\brick5.bmp");
+    images[6] = loadBMP("F:\\Project\\C++\\GLUT\\DX-Ball\\Images\\back.bmp");
+    images[7] = loadBMP("F:\\Project\\C++\\GLUT\\DX-Ball\\Images\\ball.bmp");
+}
 
-    glViewport(0, 0, width, height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-   // glOrtho(0, 100, 0, 100, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
+void draw(){
+    glColor3f(1,1,1);
+    textures = loadTexture(images[7]);
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, textures);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glBegin ( GL_POLYGON ) ;
+                glTexCoord2i(1.0,0.0);
+                glVertex2i ( -1200 , -800 ) ;
+                glTexCoord2i(1.0,1.0);
+                glVertex2i ( -1200 , 800 ) ;
+                glTexCoord2i(0.0,1.0);
+                glVertex2i ( 1200 , 800) ;
+                glTexCoord2i(0.0,0.0);
+                glVertex2i ( 1200 , -800 ) ;
+            glEnd () ;
+            glDisable(GL_TEXTURE_2D);
+            glDeleteTextures(1,&textures);
+            glFinish();
+}
+
+void DisplayText(float x ,float y ,char *text){
+    glRasterPos3f(x, y, 0);
+    int length = strlen(text);
+    for(int i=0 ;i<length ;i++)
+	{
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24 ,text[i]);
+	}
+}
+
+void RandomBallCorner(){
+    srand(time(NULL));
+    ballSpeedX = 10 + rand()%40;
+    if(rand()%2==0){
+        ballSpeedX *= 1;
+    }
+    else
+        ballSpeedX *= -1;
+}
+
+//Creating single Block
+void BrickCreator(Block brick, int br){
+    if(brick.isDead){
+        glColor3f(1,1,1);
+    }
+    else{
+         //glRectd(brick.posX, brick.posY, brick.posX+blocksize, brick.posY-80);
+        glColor3f(1,1,1);
+        if(br%2==0){
+            textures = loadTexture(images[1]);
+            }
+        else
+            textures = loadTexture(images[2]);
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, textures);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+         glBegin ( GL_POLYGON ) ;
+                glTexCoord2i(1.0,0.0);
+                glVertex2i ( brick.posX1 , brick.posY1 ) ;
+                glTexCoord2i(1.0,1.0);
+                glVertex2i ( brick.posX1 , brick.posY2 ) ;
+                glTexCoord2i(0.0,1.0);
+                glVertex2i ( brick.posX2 , brick.posY2) ;
+                glTexCoord2i(0.0,0.0);
+                glVertex2i ( brick.posX2 , brick.posY1 ) ;
+            glEnd () ;
+            glDisable(GL_TEXTURE_2D);
+            glDeleteTextures(1,&textures);
+            glFinish();
+    }
+}
+
+// For Creating Block
+void CreateBrick(){
+    if(!isBlockCreated){
+        float localX = globalX;
+        float localY = globalY;
+        int tempCounter = 0;
+        for(int j=0; j<4; j++){
+
+           for(int i = 0; i<11; i++){
+                blocks[tempCounter].posX1 = localX;
+                blocks[tempCounter].posX2 = localX + blocksize;
+                blocks[tempCounter].posY1 = localY;
+                blocks[tempCounter].posY2 = localY + 80;
+                blocks[tempCounter].isDead = false;
+                localX += blocksize + blockSpacing;
+                tempCounter++;
+           }
+           localY -= 100;
+            localX = globalX;
+        }
+        isBlockCreated = true;
+    }
+    //blocks[22].isDead = true;
+    for(int i=0; i<44; i++){
+        BrickCreator(blocks[i], i);
+    }
 }
 
 
-static void display(void)
-{
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-    /*glColor3f(1,1,0);
-    glRasterPos3f(-0.1, 0.5, 0);
-    for (int i = 0; i < strlen(msg1); i++)
+void CreateBall(float cx, float cy, float r, int num_segments){
+    //Ball
+   glColor3f(1, 1, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+     textures = loadTexture(images[7]);
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, textures);
+           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBegin(GL_POLYGON);
+    for (int ii = 0; ii < num_segments; ii++)
     {
-        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, msg1[i]);
-    }*/
-
-
-
-    glColor3f(0, 1, 0);
-    glRasterPos3f(-0.98, 0.95, 0);
-    char ss[3];
-    sprintf( ss, "%d", points );
-    for (int i = 0; i < 9; i++)
-    {
-        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, ss[i]);
+        float theta = 2.0f * 3.1415926f * float(ii) / float(num_segments);
+        float x = r * cosf(theta);
+        float y = r * sinf(theta);
+        glVertex2f(x + cx, y + cy);
     }
-
-
-
-    float ff = x, gg = y;
-    int xxi=0;
-
-    for(int i=0; i<3;i++){
-        for (int j=0 ; j<10 ; j++)
-        {
-            brick[xxi] = Brick(ff, gg);
-            ff+=0.202;
-            xxi++;
-        }
-            ff = x;
-           gg-=0.095;
-    }
-
-
-  brick[0].isDead = true;  brick[5].isDead = true;  brick[8].isDead = true;  brick[15].isDead = true;
-
-
-    for(int i=0; i<30;i++){
-        brick[i].CreateBrick();
-    }
-
-
-
-
-  // Creating Brick
-    /*float ff = x, gg = y;
-
-    for(int i=0; i<5;i++){
-        for (int j=0 ; j<10 ; j++)
-        {
-           // cout<<x;
-            CreateBrick(ff,gg);
-            ff+=0.202;
-        }
-            ff = x;
-           gg-=0.095;
-    }
-*/
-
-
-//Ball
-    glPushMatrix();
-    glTranslated(bx, by, 0.0);
-    glColor3f(color[1], color[2], color[3]);
-    glutSolidSphere(ballSize,90,2);
-    glPopMatrix();
-
-
-//Catcher
-    glPushMatrix();
-    glTranslated(posX, -0.9, 0.0);
-    glBegin(GL_QUADS);
-    glColor3f(1.0, 0.0, 0.0);
-    glVertex2f(0.0, 0.0);
-    glColor3f(1.0, 0.3, 0.2);    glVertex2f(0.0, 0.06);
-    glVertex2f(sizeX, 0.06);
-    glColor3f(1.0, 0.0, 0.0);
-    glVertex2f(sizeX, 0.0);
+                glTexCoord2i(1.0,0.0);
+                glVertex2i ( ballX-ballSize , ballY-ballSize ) ;
+                glTexCoord2i(1.0,1.0);
+                glVertex2i ( ballX-ballSize , ballY+ballSize ) ;
+                glTexCoord2i(0.0,1.0);
+                glVertex2i ( ballX+ballSize , ballY+ballSize) ;
+                glTexCoord2i(0.0,0.0);
+                glVertex2i ( ballX+ballSize , ballY-ballSize ) ;
     glEnd();
-    glPopMatrix();
-
-    glutSwapBuffers();
+    glDisable(GL_TEXTURE_2D);
+            glDeleteTextures(1,&textures);
+            glFinish();
+            //glPointSize(5);glColor3f(1, 0, 0);
+            //glBegin(GL_POINTS);
+            //glVertex2i ( ballX , ballY ) ;
+            //glVertex2i ( ballX-25 , ballY-25 ) ;
+           // glEnd();
 }
 
+void CreateCatcher(){
+    glColor3f(1,1,1);
+    glPushMatrix();
+    glTranslated(barPosX, -700, 0.0);
+     textures = loadTexture(images[0]);
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, textures);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glBegin ( GL_POLYGON ) ;
+                glTexCoord2i(1.0,0.0);
+                glVertex2i ( 0 , 0 ) ;
+                glTexCoord2i(1.0,1.0);
+                glVertex2i ( 0 , 50 ) ;
+                glTexCoord2i(0.0,1.0);
+                glVertex2i ( barSize , 50) ;
+                glTexCoord2i(0.0,0.0);
+                glVertex2i ( barSize , 0 ) ;
+            glEnd () ;
+            glDisable(GL_TEXTURE_2D);
+            glDeleteTextures(1,&textures);
+            glFinish();
+    glPopMatrix();
+
+}
+
+void ResetGameState(){
+    isCollideToBottom = false;
+    isGameStarted = false;
+    gameOverScreen=false;
+    Score = 0;
+    barPosX = -150; barSize = 350;
+    ballSize= 25;
+    ballX = barPosX+barSize/2; ballY = -650+ballSize;
+    ballSpeedY = 40; ballSpeedX = 0;
+    for(int i=0; i<44; i++){
+            blocks[i].isDead = false;
+        }
+}
+
+void backButton() {
+	if(mouseX <= -450 && mouseX >= -500 && mouseY >= -325 && mouseY <= -300)
+        {
+			glColor3f(0, 0, 1);
+			if(mouseButtonPressed)
+                {
+                    mouseButtonPressed = false;
+                    instructionsGame = false;
+                    startScreen = true;
+                }
+        }
+	else
+        glColor3f(0, 1, 1);
+	DisplayText(-1000, -550, "Back");
+}
+
+void InsructionScreenDisplay(){
+    glClearColor(0,0,0,0);
+//     RandomStars(2);
+    //draw();
+	glColor3f(1, 1, 1);
+	DisplayText(-900, 500, "Press Right key to move right.");
+	DisplayText(-900, 400, "Press left key to move left.");
+	DisplayText(-900, 300, "Press Space to shoot the Ball.");
+	DisplayText(-900, 200, "Press Mouse Left button to select any Option.");
+	DisplayText(-900, 100, "You get 1 points for breaking one Brick.");
+	DisplayText(-900, 0  , "If the ball hit on the Ground You lose.");
+	//DisplayText(-900, -100, "Level up by Scoring 100 for each level");
+	//DisplayText(-900, -200, "The Objective is to score maximum points");
+    backButton();
+
+}
+
+void StartScreenDisplay(){
+    GetImage();
+     glBegin ( GL_POLYGON ) ;
+        glColor3f(0.05, 0, 0);
+            glVertex2i ( -1200 , -800 ) ;
+        glColor3f(0, 0.05, 0);
+            glVertex2i ( -1200 , 800 ) ;
+        glColor3f(0, 0, 0.05);
+            glVertex2i ( 1200 , 800) ;
+        glColor3f(0, 0.05, 0);
+            glVertex2i ( 1200 , -800 ) ;
+        glEnd () ;
+    glLineWidth(40);
+    glClearColor(0,0,0,0);
+
+    // Game Title Bar
+        glColor3f(1,0,1);
+        glBegin(GL_POLYGON);
+            glVertex3f(-350,650,0.5);
+            glVertex3f(-400,700,0.5);
+            glVertex3f(400,700,0.5);
+            glVertex3f(350,650,0.5);
+            glVertex3f(400,600,0.5);
+            glVertex3f(-400,600,0.5);
+        glEnd();
+        glColor3f(1,1,1);
+        DisplayText(-80, 630, "DX-Ball");
+
+    //Start Game Button
+        glColor3f(0.145, 0.580, 0.796);
+        glBegin(GL_LINE_STRIP);
+            glVertex2f(-200 ,200);
+            glVertex2f(-200 ,300);
+            glVertex2f(200 ,300);
+            glVertex2f(200 ,200);
+            glVertex2f(-200 ,200);
+        glEnd();
+    //Instruction Button
+        glBegin(GL_LINE_STRIP);
+            glVertex2f(-200, -50);
+            glVertex2f(-200 ,50);
+            glVertex2f(200 ,50);
+            glVertex2f(200 ,-50);
+            glVertex2f(-200, -50);
+        glEnd();
+    //Quit Button
+        glBegin(GL_LINE_STRIP);
+            glVertex2f(-200 ,-300);
+            glVertex2f(-200 ,-200);
+            glVertex2f(200, -200);
+            glVertex2f(200, -300);
+            glVertex2f(-200 ,-300);
+        glEnd();
+
+    //Start Game Button Function
+        if(mouseX>=-100 && mouseX<=100 && mouseY>=50 && mouseY<=100)
+            {
+                glColor3f(0 ,0 ,1) ; //mouse hover color
+                if(mouseButtonPressed)
+                    {
+                        gameScreen = true ;
+                        gameOverScreen = false;
+                        mouseButtonPressed = false;
+                        ResetGameState();
+                    }
+            }
+        else
+            glColor3f(1 , 1, 1);
+        DisplayText(-100 ,235 ,"Start Game");
+
+    //Instruction Button Function
+        if(mouseX>=-100 && mouseX<=100 && mouseY>=-90 && mouseY<=0)
+            {
+                glColor3f(0 ,0 ,1);  //mouse hover color
+                if(mouseButtonPressed)
+                    {
+                        instructionsGame = true ;
+                        mouseButtonPressed = false;
+                    }
+            }
+        else
+            glColor3f(1 , 1, 1);
+        DisplayText(-120 ,-20 ,"Instructions");
+
+    //Exit Button Function
+        if(mouseX>=-100 && mouseX<=100 && mouseY>=-190 && mouseY<=-140)
+            {
+                glColor3f(0 ,0 ,1);
+                if(mouseButtonPressed)
+                    {
+                    gameQuit = true ;
+                    mouseButtonPressed = false;
+                    }
+            }
+        else
+            glColor3f(1 , 1, 1);
+        DisplayText(-50 ,-270 ,"Quit");
 
 
+}
+
+void GamePlayScreenDisplay(){
+    glClearColor(0,0,0,0);
+
+
+    CreateBall(ballX, ballY, ballSize, 20);
+    CreateCatcher();
+    CreateBrick();
+
+    char temp[40];
+    glColor3f(1,0.2,0.1);
+    sprintf(temp,"Score : %d",Score);
+    DisplayText(-1180,750,temp);
+}
+
+void GameOverScreenDisplay(){
+    glColor3f(1,1,1);
+	glLineWidth(1);
+	glColor3f(0, 1, 1);
+	glBegin(GL_LINE_STRIP);				//GAME OVER
+		glVertex2f(-550 ,650);
+		glVertex2f(-550 ,520);
+		glVertex2f(550 ,520);
+		glVertex2f(550 ,650);
+		glVertex2f(-550 ,650);
+	glEnd();
+
+	glColor3f(1, 1, 0);
+	glBegin(GL_POLYGON);				//RESTART POLYGON
+		glVertex3f(-200, 50 ,0.5);
+		glVertex3f(-200 ,150 ,0.5);
+		glVertex3f(200 ,150 ,0.5);
+		glVertex3f(200 ,50, 0.5);
+	glEnd();
+
+	glBegin(GL_POLYGON);				//QUIT POLYGON
+		glVertex3f(-200 ,-200 ,0.5);
+		glVertex3f(-200 ,-100 ,0.5);
+		glVertex3f(200, -100 ,0.5);
+		glVertex3f(200, -200 ,0.5);
+	glEnd();
+
+
+	DisplayText(-200 ,560 ,"G A M E   O V E R ");
+
+	glColor3f(0.5 , 0, 0.5);
+	char temp[40];
+	sprintf(temp,"Score : %d",Score);
+	DisplayText(-100 ,380 ,temp);
+
+    glColor3f(1 , 0, 0.1);
+	char temp2[40];
+	sprintf(temp2,"High Score : %d",highScore);
+	DisplayText(-150 ,280 ,temp2);
+
+
+	if(mouseX>=-100 && mouseX<=100 && mouseY>=-25 && mouseY<=25){
+		glColor3f(0 ,1 ,1);
+    if(mouseButtonPressed){
+         //Reset game default values
+			gameScreen = true ;
+			gameOverScreen=false;
+			mouseButtonPressed = false;
+			ResetGameState();
+            }
+        }
+	else
+		glColor3f(0 , 0, 1);
+	DisplayText(-70 ,80 ,"Restart");
+
+	if(mouseX>=-100 && mouseX<=100 && mouseY>=-150 && mouseY<=-100){
+		glColor3f(0 ,1 ,0);
+		if(mouseButtonPressed){
+			exit(0);
+			mouseButtonPressed = false;
+		}
+	}
+	else
+		glColor3f(0, 0, 1);
+	DisplayText(-100 ,-170 ,"    Quit");
+}
+
+static void display(void){
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glViewport(0, 0, 1200, 800);
+
+    if(startScreen){
+        StartScreenDisplay();
+    }
+
+    if(instructionsGame){
+        startScreen = false;
+        InsructionScreenDisplay();
+    }
+
+    if(gameScreen){
+        startScreen = false;
+        GamePlayScreenDisplay();
+    }
+
+    if(gameOverScreen){
+        GameOverScreenDisplay();
+    }
+
+    if(gameQuit){
+        exit(0);
+    }
+
+
+    glFlush();
+	glLoadIdentity();
+	glutSwapBuffers();
+}
+
+void GenarateBonus(Block bonus){
+    glColor3f(1,0.5,1);
+    glPushMatrix();
+    glTranslated(0, -100, 0.0);
+    textures = loadTexture(images[3]);
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, textures);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+         glBegin ( GL_POLYGON ) ;
+                glTexCoord2i(1.0,0.0);
+                glVertex2i ( blocks[0].posX1 , blocks[0].posY1 ) ;
+                glTexCoord2i(1.0,1.0);
+                glVertex2i ( blocks[0].posX1 , blocks[0].posY2 ) ;
+                glTexCoord2i(0.0,1.0);
+                glVertex2i ( blocks[0].posX2 , blocks[0].posY2) ;
+                glTexCoord2i(0.0,0.0);
+                glVertex2i ( blocks[0].posX2 , blocks[0].posY1 ) ;
+            glEnd () ;
+            glDisable(GL_TEXTURE_2D);
+            glDeleteTextures(1,&textures);
+            glFinish();
+        glPopMatrix();
+        //DisplayText(0,0,"Bonus");
+
+        glutSwapBuffers();
+}
 
 void Update(int v){
+    if(gameScreen && isGameStarted){
+         ballY += ballSpeedY;
+         ballX += ballSpeedX;
 
 
-// Collide Condition for the boundaries
+         if(barPosX<= ballX  && ballX<= barPosX + barSize && ballY<= -650+ballSize){
+                isCatched = true;
+         }
 
 
-        by+=ballSpeed;
-        bx+=incX;
+         if(ballX<=-1200 + ballSize ){
+                isCollideToLeft = true;
+            }
+        if(ballX>=1200 - ballSize ){
+                isCollideToRight = true;
+            }
+        if(ballY<=-800 + ballSize){
+                isCollideToBottom = true;
+            }
+        if(ballY>=800 - ballSize ){
+                isCollideToTop = true;
+            }
 
-
-
-     if(by<= -0.9+0.06+ballSize && (bx>=posX && bx<=posX+sizeX)){
-            //ballDown=false;
-            isCatched = true;
-           // ballGoUp=true;
+        if(isCollideToTop){
+            PlaySound("F:\\Project\\C++\\GLUT\\DX-Ball\\Sounds\\Swordswi.wav",NULL,SND_ASYNC);
+            ballSpeedY*=-1;
+            isCollideToTop=false;
         }
-     if(isCatched){
-            float ballOnCatcher = (sizeX+(bx-posX))/sizeX;
+        if(isCatched){
 
+            float ballOnCatcher = (barSize+(ballX-barPosX))/barSize;
             if(ballOnCatcher>=1 && 1.1>ballOnCatcher)
-                incX=-0.025;
+                ballSpeedX= -32;
             else if(ballOnCatcher>=1.1 && 1.2>ballOnCatcher)
-                incX=-0.01875;
-            else if(ballOnCatcher>=1.2 && 1.3>ballOnCatcher)
-                incX=-0.0125;
-            else if(ballOnCatcher>=1.3 && 1.4>ballOnCatcher)
-                incX=-0.00625;
-            else if(ballOnCatcher>=1.4 && 1.6>ballOnCatcher)
-                incX=-0.0;
-            else if(ballOnCatcher>=1.6 && 1.7>ballOnCatcher)
-                incX=0.00625;
-            else if(ballOnCatcher>=1.7 && 1.8>ballOnCatcher)
-                incX=0.0125;
+                ballSpeedX= -26;
+            else if(ballOnCatcher>=1.2 && 1.33>ballOnCatcher)
+                ballSpeedX= -18;
+            else if(ballOnCatcher>=1.33 && 1.48>ballOnCatcher)
+                ballSpeedX= -9;
+            else if(ballOnCatcher>=1.48 && 1.52>ballOnCatcher)
+                ballSpeedX= -0.0;
+            else if(ballOnCatcher>=1.52 && 1.67>ballOnCatcher)
+                ballSpeedX= 9;
+            else if(ballOnCatcher>=1.67 && 1.8>ballOnCatcher)
+                ballSpeedX= 18;
             else if(ballOnCatcher>=1.8 && 1.9>ballOnCatcher)
-                incX=0.01875;
+                ballSpeedX= 26;
             else if(ballOnCatcher>=1.9 && 2.0>=ballOnCatcher)
-                incX=0.025;
+                ballSpeedX= 32;
+            PlaySound("F:\\Project\\C++\\GLUT\\DX-Ball\\Sounds\\Boing.wav",NULL,SND_ASYNC);
+            ballSpeedY*=-1;
+            isCatched = false;
+        }
+        if(isCollideToBottom){
+            if(highScore<Score)
+                highScore = Score;
+            gameOverScreen = true;
+            gameScreen = false;
+        }
 
-
-                PlaySound("F:\\Project\\C++\\GLUT\\DX-Ball\\Sounds\\Boing.wav",NULL,SND_ASYNC);
-                color[0]=static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-                color[1]=static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-                color[2]=static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-                ballSpeed*=-1;
-                isCatched=false;
-                points++;
-               // isColideToTop=false;
-                //ballGoUp=true;
+        if(isCollideToLeft || isCollideToRight){
+            PlaySound("F:\\Project\\C++\\GLUT\\DX-Ball\\Sounds\\Swordswi.wav",NULL,SND_ASYNC);
+            ballSpeedX*=-1;
+            isCollideToRight=false;
+            isCollideToLeft=false;
         }
 
 
+        for(int i=0; i<44; i++){
 
-    if(bx<=-1 + ballSize ){
-        isColideToLeft = true;
-    }
-     if(bx>=1 - ballSize ){
-        isColideToRight = true;
-    }
-     if(by<=-1 + ballSize){
-        isColideToBottom = true;
-    }
-     if(by>=1 - ballSize ){
-        isColideToTop = true;
-    }
+           if(blocks[i].posX1 - ballSize/1.8 < ballX && ballX <  blocks[i].posX2 + ballSize/1.8 && blocks[i].posY1 - ballSize/1.8 < ballY && ballY <  blocks[i].posY2 + ballSize/1.8 )
+                {
 
-    if(isColideToBottom || isColideToTop){
-        PlaySound("F:\\Project\\C++\\GLUT\\DX-Ball\\Sounds\\Swordswi.wav",NULL,SND_ASYNC);
-        ballSpeed*=-1;
-        isColideToBottom=false;
-        isColideToTop=false;
-        points++;
+                    if(!blocks[i].isDead){
+                        ballSpeedY*=-1;
+                        Score++;
+                        //GenarateBonus(blocks[i]);
+                        blocks[i].isDead = true;
+
+
+                    }
+
+                }
+        }
 
     }
-    if(isColideToLeft || isColideToRight){
-        PlaySound("F:\\Project\\C++\\GLUT\\DX-Ball\\Sounds\\Swordswi.wav",NULL,SND_ASYNC);
-        incX*=-1;
-        isColideToRight=false;
-         isColideToLeft=false;
-         points++;
-    }
-
 
     glutTimerFunc(100, Update, v);
-
 }
-
-void mySpecialFunc(int key, int x, int y){
-    switch(key){
-    case GLUT_KEY_RIGHT:
-        if(posX<1.0-sizeX)
-            posX += 0.0625;
-		break;
-    case GLUT_KEY_LEFT:
-        if(posX>-1.0)
-            posX -= 0.0625;
-	    break;
-    case GLUT_KEY_UP:
-            sizeX += 0.125;
-		break;
-    case GLUT_KEY_DOWN:
-            sizeX -= 0.125;
-	    break;
-
-	}
-
-    glutPostRedisplay();
-}
-
-static void key(unsigned char key, int x, int y)
-{
-    switch (key)
-    {
-        case 'w':
-            ballSize+=0.006;
-            break;
-
-        case 's':
-           ballSize-=0.006;
-           break;
-        case ' ':
-             //brick[0].isDead = true;
-            break;
-    }
-
-    glutPostRedisplay();
-}
-
-
 
 static void idle(void)
 {
     glutPostRedisplay();
 }
 
+void myinit()
+{
+	glClearColor(0.5,0.5,0.5,0);
+	glColor3f(1.0,0.0,0.0);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+    gluOrtho2D(-1200,1200,-800,800);
+	glMatrixMode(GL_MODELVIEW);
+}
+
+void passiveMotionFunc(int x,int y) {
+
+	//when mouse not clicked
+	mouseX = float(x)/(m_viewport[2]/1200.0)-600.0;  //converting screen resolution to ortho 2d spec
+	mouseY = -(float(y)/(m_viewport[3]/800.0)-350.0);
+	display();
+}
+
+void SpecialFunc(int key, int x, int y){
+    if(gameScreen && isGameStarted)
+        {
+        switch(key){
+            case GLUT_KEY_RIGHT:
+                if(barPosX<1200-barSize)
+                    barPosX += 50;
+                break;
+            case GLUT_KEY_LEFT:
+                if(barPosX>-1200)
+                    barPosX -= 50;
+                break;
+            case GLUT_KEY_UP:
+                    barSize += 50;
+                break;
+            case GLUT_KEY_DOWN:
+                    barSize -= 50;
+                break;
+             case GLUT_KEY_END:
+                {
+                    ResetGameState();
+                }
+                break;
+            }
+        }
+
+
+    if(gameScreen && !isGameStarted)
+        {
+        switch(key){
+            case GLUT_KEY_RIGHT:
+                if(barPosX<1200-barSize)
+                    {
+                        barPosX += 50;
+                        ballX += 50;
+                    }
+                break;
+            case GLUT_KEY_LEFT:
+                if(barPosX>-1200)
+                {
+                    barPosX -= 50;
+                    ballX -= 50;
+                }
+                break;
+            case GLUT_KEY_UP:
+                    barSize += 50;
+                break;
+            case GLUT_KEY_DOWN:
+                    barSize -= 50;
+                break;
+            case GLUT_KEY_HOME:
+                {
+                    isGameStarted = true;
+                    RandomBallCorner();
+                }
+                break;
+            }
+        }
+    glutPostRedisplay();
+}
+
+static void keyBoard(unsigned char key, int x, int y)
+{
+     if(gameScreen && !isGameStarted)
+        {
+            switch (key)
+                {
+                case 'w':
+                    ballY += 10;
+                    break;
+                case 's':
+                   ballY -= 10;
+                   break;
+                case 'a':
+                    ballX -= 10;
+                    break;
+                 case 'd':
+                    ballX += 10;
+                    break;
+                case ' ':
+                    {
+                    isGameStarted = true;
+                    RandomBallCorner();
+                    }
+                    break;
+                }
+        }
+
+
+    glutPostRedisplay();
+}
+
+void mouseClick(int buttonPressed ,int state ,int x, int y) {
+	if(buttonPressed == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+		mouseButtonPressed = true;
+	else
+		mouseButtonPressed = false;
+	display();
+}
 
 int main(int argc, char *argv[])
 {
     glutInit(&argc, argv);
-    glutInitWindowSize(800,800);
-    glutInitWindowPosition(300,180);
+    glutInitWindowSize(1200,800);
+    glutInitWindowPosition(300,100);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 
     glutCreateWindow("DX-Ball");
 
-    glutReshapeFunc(resize);
     glutDisplayFunc(display);
-    glutSpecialFunc(mySpecialFunc);
-    glutKeyboardFunc(key);
+    glutSpecialFunc(SpecialFunc);
+    glutKeyboardFunc(keyBoard);
     glutTimerFunc(100, Update, 0);
-
+    glutPassiveMotionFunc(passiveMotionFunc);
+    glutMouseFunc(mouseClick);
+    glGetIntegerv(GL_VIEWPORT ,m_viewport);
     glutIdleFunc(idle);
+    myinit();
 
     glutMainLoop();
 

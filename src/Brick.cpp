@@ -7,6 +7,7 @@
 float brickPosX, brickPosY;
 bool isDead = false;
 
+
 Brick::Brick(float x, float y){
         brickPosX = x;
         brickPosY = y;
@@ -20,14 +21,15 @@ Brick::CreateBrick(){
         glTranslated(brickPosX, brickPosY, 0.0);
         glBegin(GL_QUADS);
 
-        if(!isDead)
-            glColor3f(0.1,0.6, 0.2);
+        if(!isDead){
+            glColor3f(0.8,0.5, 1.0);
+        }
         else
-            glColor3f(0.0,0.0, 0.0);
+            glColor3f(1.0,0.0, 0.0);
         glVertex2f(0.0, 0.0);
-        glVertex2f(0.0, 0.08);
-        glVertex2f(0.18, 0.08);
-        glVertex2f(0.18, 0.0);
+        glVertex2f(0.0, 80);
+        glVertex2f(100, 80);
+        glVertex2f(100, 0);
         glEnd();
         glPopMatrix();
     }
