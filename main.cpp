@@ -1,14 +1,10 @@
 #include<windows.h>
 #include <GL/glut.h>
 #include<iostream>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include "imageloader.h"
 #include <math.h>
 #include <time.h>
 #include "Brick.h"
-
 
 using namespace std;
 
@@ -26,19 +22,16 @@ struct Block{
     float posX1, posX2;
     float posY1, posY2;
     bool isDead;
-};
+}blocks[50];
 
-Block blocks[50];
 
 bool startScreen = true, gameScreen = false, gameOverScreen=false, instructionsGame = false;
-bool gameQuit = false, isGameStarted = false, isCatched=false;
+bool gameQuit = false, isGameStarted = false, finishGame=false, isCatched=false;
 bool isCollideToTop=false, isCollideToBottom=false, isCollideToRight=false, isCollideToLeft=false;
 bool mouseButtonPressed = false, isBlockCreated = false;
 Brick *brick = (Brick*)malloc(sizeof(Brick)*totalBrick);
 
 float brickPositionX[4][11];
-
-
 
 GLuint textures;
 Image *images[10];
@@ -64,27 +57,6 @@ void GetImage()
     images[7] = loadBMP("F:\\Project\\C++\\GLUT\\DX-Ball\\Images\\ball.bmp");
 }
 
-void draw(){
-    glColor3f(1,1,1);
-    textures = loadTexture(images[7]);
-            glEnable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D, textures);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glBegin ( GL_POLYGON ) ;
-                glTexCoord2i(1.0,0.0);
-                glVertex2i ( -1200 , -800 ) ;
-                glTexCoord2i(1.0,1.0);
-                glVertex2i ( -1200 , 800 ) ;
-                glTexCoord2i(0.0,1.0);
-                glVertex2i ( 1200 , 800) ;
-                glTexCoord2i(0.0,0.0);
-                glVertex2i ( 1200 , -800 ) ;
-            glEnd () ;
-            glDisable(GL_TEXTURE_2D);
-            glDeleteTextures(1,&textures);
-            glFinish();
-}
 
 void DisplayText(float x ,float y ,char *text){
     glRasterPos3f(x, y, 0);
@@ -111,7 +83,6 @@ void BrickCreator(Block brick, int br){
         glColor3f(1,1,1);
     }
     else{
-         //glRectd(brick.posX, brick.posY, brick.posX+blocksize, brick.posY-80);
         glColor3f(1,1,1);
         if(br%2==0){
             textures = loadTexture(images[1]);
@@ -167,18 +138,9 @@ void CreateBrick(){
 }
 
 
-
-
 void CreateBall(float cx, float cy, float r, int num_segments){
     //Ball
    glColor3f(1, 1, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-     textures = loadTexture(images[7]);
-            glEnable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D, textures);
-           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBegin(GL_POLYGON);
     for (int ii = 0; ii < num_segments; ii++)
     {
@@ -187,23 +149,8 @@ void CreateBall(float cx, float cy, float r, int num_segments){
         float y = r * sinf(theta);
         glVertex2f(x + cx, y + cy);
     }
-                glTexCoord2i(1.0,0.0);
-                glVertex2i ( ballX-ballSize , ballY-ballSize ) ;
-                glTexCoord2i(1.0,1.0);
-                glVertex2i ( ballX-ballSize , ballY+ballSize ) ;
-                glTexCoord2i(0.0,1.0);
-                glVertex2i ( ballX+ballSize , ballY+ballSize) ;
-                glTexCoord2i(0.0,0.0);
-                glVertex2i ( ballX+ballSize , ballY-ballSize ) ;
     glEnd();
-    glDisable(GL_TEXTURE_2D);
-            glDeleteTextures(1,&textures);
-            glFinish();
-            //glPointSize(5);glColor3f(1, 0, 0);
-            //glBegin(GL_POINTS);
-            //glVertex2i ( ballX , ballY ) ;
-            //glVertex2i ( ballX-25 , ballY-25 ) ;
-           // glEnd();
+
 }
 
 void CreateCatcher(){
@@ -273,29 +220,40 @@ void InsructionScreenDisplay(){
 	DisplayText(-900, 200, "Press Mouse Left button to select any Option.");
 	DisplayText(-900, 100, "You get 1 points for breaking one Brick.");
 	DisplayText(-900, 0  , "If the ball hit on the Ground You lose.");
-	//DisplayText(-900, -100, "Level up by Scoring 100 for each level");
-	//DisplayText(-900, -200, "The Objective is to score maximum points");
     backButton();
 
+}
+void Stars(int size)
+{
+    glColor3f(1,1,1);
+        glPointSize(size);
+            glBegin(GL_POINTS);
+            glVertex2f(rand()%1200+100,rand()%800);
+            glVertex2f(rand()%-1200-1200,rand()%800);
+            glVertex2f(rand()%1200+100,rand()%800-800);
+            glVertex2f(rand()%+1200-1200,rand()%800-800);
+        glEnd();
 }
 
 void StartScreenDisplay(){
     GetImage();
+
      glBegin ( GL_POLYGON ) ;
         glColor3f(0.05, 0, 0);
             glVertex2i ( -1200 , -800 ) ;
-        glColor3f(0, 0.05, 0);
+        glColor3f(0, 0.05, 0.05);
             glVertex2i ( -1200 , 800 ) ;
         glColor3f(0, 0, 0.05);
             glVertex2i ( 1200 , 800) ;
         glColor3f(0, 0.05, 0);
             glVertex2i ( 1200 , -800 ) ;
         glEnd () ;
+    Stars(3);
     glLineWidth(40);
     glClearColor(0,0,0,0);
 
     // Game Title Bar
-        glColor3f(1,0,1);
+        glColor3f(0.5,0,0);
         glBegin(GL_POLYGON);
             glVertex3f(-350,650,0.5);
             glVertex3f(-400,700,0.5);
@@ -377,7 +335,6 @@ void StartScreenDisplay(){
             glColor3f(1 , 1, 1);
         DisplayText(-50 ,-270 ,"Quit");
 
-
 }
 
 void GamePlayScreenDisplay(){
@@ -387,6 +344,10 @@ void GamePlayScreenDisplay(){
     CreateBall(ballX, ballY, ballSize, 20);
     CreateCatcher();
     CreateBrick();
+    if(Score>44){
+        finishGame = true;
+        gameScreen = false;
+    }
 
     char temp[40];
     glColor3f(1,0.2,0.1);
@@ -461,12 +422,58 @@ void GameOverScreenDisplay(){
 	DisplayText(-100 ,-170 ,"    Quit");
 }
 
+void FinishGameScreen(){
+    glColor3f(1, 0, 0);
+    DisplayText(-170,450,"Y O  U  W O N");
+    glColor3f(1, 0.5, 0);
+    DisplayText(-300,300,"Thanks For Playing Our Game!!");
+    glColor3f(1, 1, 0);
+	glBegin(GL_POLYGON);				//RESTART POLYGON
+		glVertex3f(-200, 50 ,0.5);
+		glVertex3f(-200 ,150 ,0.5);
+		glVertex3f(200 ,150 ,0.5);
+		glVertex3f(200 ,50, 0.5);
+	glEnd();
+
+	glBegin(GL_POLYGON);				//QUIT POLYGON
+		glVertex3f(-200 ,-200 ,0.5);
+		glVertex3f(-200 ,-100 ,0.5);
+		glVertex3f(200, -100 ,0.5);
+		glVertex3f(200, -200 ,0.5);
+	glEnd();
+	if(mouseX>=-100 && mouseX<=100 && mouseY>=-25 && mouseY<=25){
+		glColor3f(0 ,1 ,1);
+    if(mouseButtonPressed){
+         //Reset game default values
+			gameScreen = true ;
+			finishGame=false;
+			mouseButtonPressed = false;
+			ResetGameState();
+            }
+        }
+	else
+		glColor3f(0 , 0, 1);
+	DisplayText(-70 ,80 ,"Restart");
+
+	if(mouseX>=-100 && mouseX<=100 && mouseY>=-150 && mouseY<=-100){
+		glColor3f(0 ,1 ,0);
+		if(mouseButtonPressed){
+			exit(0);
+			mouseButtonPressed = false;
+		}
+	}
+	else
+		glColor3f(0, 0, 1);
+	DisplayText(-100 ,-170 ,"    Quit");
+}
+
 static void display(void){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     //glViewport(0, 0, 1200, 800);
 
     if(startScreen){
         StartScreenDisplay();
+        //PlaySound("F:\\Project\\C++\\GLUT\\DX-Ball\\Sounds\\BackgroundMusic.wav",NULL,SND_ASYNC);
     }
 
     if(instructionsGame){
@@ -483,10 +490,13 @@ static void display(void){
         GameOverScreenDisplay();
     }
 
+    if(finishGame){
+        FinishGameScreen();
+    }
+
     if(gameQuit){
         exit(0);
     }
-
 
     glFlush();
 	glLoadIdentity();
@@ -578,6 +588,7 @@ void Update(int v){
         if(isCollideToBottom){
             if(highScore<Score)
                 highScore = Score;
+            PlaySound("F:\\Project\\C++\\GLUT\\DX-Ball\\Sounds\\Padexplo.wav",NULL,SND_ASYNC);
             gameOverScreen = true;
             gameScreen = false;
         }
@@ -592,7 +603,7 @@ void Update(int v){
 
         for(int i=0; i<44; i++){
 
-           if(blocks[i].posX1 - ballSize/1.8 < ballX && ballX <  blocks[i].posX2 + ballSize/1.8 && blocks[i].posY1 - ballSize/1.8 < ballY && ballY <  blocks[i].posY2 + ballSize/1.8 )
+           if(blocks[i].posX1 - ballSize/1.5 < ballX && ballX <  blocks[i].posX2 + ballSize/1.5 && blocks[i].posY1 - ballSize/1.5 < ballY && ballY <  blocks[i].posY2 + ballSize/1.5 )
                 {
 
                     if(!blocks[i].isDead){
@@ -600,6 +611,7 @@ void Update(int v){
                         Score++;
                         //GenarateBonus(blocks[i]);
                         blocks[i].isDead = true;
+                        PlaySound("F:\\Project\\C++\\GLUT\\DX-Ball\\Sounds\\Bang.wav",NULL,SND_ASYNC);
 
 
                     }
@@ -703,6 +715,19 @@ static void keyBoard(unsigned char key, int x, int y)
         {
             switch (key)
                 {
+                case ' ':
+                    {
+                    isGameStarted = true;
+                    RandomBallCorner();
+                    }
+                    break;
+                }
+        }
+
+    if(gameScreen && isGameStarted)
+        {
+            switch (key)
+                {
                 case 'w':
                     ballY += 10;
                     break;
@@ -715,16 +740,8 @@ static void keyBoard(unsigned char key, int x, int y)
                  case 'd':
                     ballX += 10;
                     break;
-                case ' ':
-                    {
-                    isGameStarted = true;
-                    RandomBallCorner();
-                    }
-                    break;
                 }
         }
-
-
     glutPostRedisplay();
 }
 
